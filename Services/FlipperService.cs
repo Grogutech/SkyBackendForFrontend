@@ -278,6 +278,10 @@ namespace Coflnet.Sky.Commands.Shared
             using var activity = tracer.StartActivity("DeliverFlip").SetTag("uuid", flip.Auction.Uuid);
             flip.Finder = LowPricedAuction.FinderType.FLIPPER;
 
+            activity.SetTag("now", DateTime.UtcNow);
+            activity.SetTag("find time", flip.Auction.FindTime);
+            activity.SetTag("send time", (DateTime.UtcNow - flip.Auction.FindTime).TotalSeconds);
+
             if (flip.Auction.Context?.ContainsKey("pre-api") ?? true)
             {
                 await PreApiLowPriceHandler.Invoke(this, new()
@@ -325,8 +329,12 @@ namespace Coflnet.Sky.Commands.Shared
             if (flip.Auction.Context != null)
                 flip.Auction.Context["crec"] = (DateTime.UtcNow - flip.Auction.FindTime).ToString();
             var tracer = DiHandler.GetService<ActivitySource>();
-            using var activity = tracer.StartActivity("DeliverFlip").SetTag("uuid", flip.Auction.Uuid);
+            using var activity = tracer.StartActivity("DeliverLowPricedAuction").SetTag("uuid", flip.Auction.Uuid);
             var time = (DateTime.UtcNow - flip.Auction.FindTime).TotalSeconds;
+
+            activity.SetTag("now", DateTime.UtcNow);
+            activity.SetTag("find time", flip.Auction.FindTime);
+            activity.SetTag("send time", time);
 
             if (flip.Auction != null && flip.Auction.NBTLookup == null)
                 flip.Auction.NBTLookup = NBT.CreateLookup(flip.Auction);
