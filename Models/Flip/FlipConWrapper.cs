@@ -36,7 +36,7 @@ namespace Coflnet.Sky.Commands.Shared
             {
                 AccountTier.PREMIUM => 3,
                 AccountTier.PREMIUM_PLUS => 6,
-                AccountTier.SUPER_PREMIUM => 6,
+                AccountTier.SUPER_PREMIUM => 12,
                 _ => 1
             };
             LowPriced = Channel.CreateBounded<LowPricedAuction>(
