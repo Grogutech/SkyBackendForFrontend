@@ -226,7 +226,7 @@ namespace Coflnet.Sky.Commands.Shared
                         : lowestBins.TakeWhile(a =>
                         {
                             foundcount += a.Count;
-                            return foundcount < count;
+                            return foundcount <= count;
                         }).Sum(a => a.StartingBid);
                 var sell = 0L;
                 if(lowestBins.Count > 0)

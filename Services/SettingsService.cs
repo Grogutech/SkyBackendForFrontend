@@ -52,22 +52,33 @@ namespace Coflnet.Sky.Commands.Shared
             string value = null;
             for (int i = 0; i < 3; i++)
             {
-                value = await api.SettingsUserIdSettingKeyGetAsync(userId, key);
-                if (value != null || i == 2)
+                try
+                {
+                    var response = await api.SettingsUserIdSettingKeyGetWithHttpInfoAsync(userId, key);
+                    if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                        return DefaultFor(defaultGetter);
+                    value = response.Data;
+                }
+                catch (System.Exception)
+                {
+                    if (i == 2)
+                        throw;
+                }
+                if (value != null)
                     break;
-                await Task.Delay(150 * i);
+
+                await Task.Delay(150 * (i + 1));
             }
-            T val;
-            if (value == null)
-            {
-                if (defaultGetter != null)
-                    val = defaultGetter();
-                else
-                    val = default(T);
-            }
-            else
-                val = Deserialize<T>(value);
+            T val = Deserialize<T>(value);
             return val;
+        }
+
+        private static T DefaultFor<T>(Func<T> defaultGetter)
+        {
+            if (defaultGetter != null)
+                return defaultGetter();
+            else
+                return default(T);
         }
 
         private static string GetSubKey(string userId, string key)
