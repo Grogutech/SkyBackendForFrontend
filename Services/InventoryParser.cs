@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Coflnet.Sky.Core;
 using Newtonsoft.Json;
@@ -129,7 +130,14 @@ public class InventoryParser
             var ExtraAttributes = item.nbt.value?.ExtraAttributes?.value;
             if (ExtraAttributes == null)
             {
-                yield return null;
+                yield return new SaveAuction()
+                {
+                    Tag = "UNKOWN",
+                    Enchantments = new(),
+                    Count = 1,
+                    ItemName = item.displayName,
+                    Uuid = ExtraAttributes?.uuid?.value ?? Random.Shared.Next().ToString(),
+                };
                 continue;
             }
             Dictionary<string, object> attributesWithoutEnchantments = null;
@@ -141,6 +149,8 @@ public class InventoryParser
             }
             catch (System.Exception e)
             {
+                Activity.Current?.AddEvent(new ActivityEvent("Log", default, new(new Dictionary<string, object>() { {
+                    "message", "Error while parsing inventory" }, { "error", e }, {"item", JsonConvert.SerializeObject(item)} })));
                 dev.Logger.Instance.Error(e, "Error while parsing inventory");
             }
             yield return auction;
@@ -152,13 +162,14 @@ public class InventoryParser
         attributesWithoutEnchantments = new Dictionary<string, object>();
         Denest(ExtraAttributes, attributesWithoutEnchantments);
         var enchantments = new Dictionary<string, int>();
-        foreach (var enchantment in ExtraAttributes.enchantments.value)
-        {
-            Console.WriteLine(enchantment.Value.value.GetType());
-            var val = new Newtonsoft.Json.Linq.JValue(2);
+        if (ExtraAttributes.enchantments?.value != null)
+            foreach (var enchantment in ExtraAttributes.enchantments.value)
+            {
+                Console.WriteLine(enchantment.Value.value.GetType());
+                var val = new Newtonsoft.Json.Linq.JValue(2);
 
-            enchantments.Add(enchantment.Name, (int)enchantment.Value.value);
-        }
+                enchantments.Add(enchantment.Name, (int)enchantment.Value.value);
+            }
 
         auction = new SaveAuction
         {
